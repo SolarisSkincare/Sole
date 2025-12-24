@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DrShams AI | All-in-One System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
+        .active-tab { color: #6366f1; border-bottom: 3px solid #6366f1; }
+        .luxury-card { background: white; border-radius: 2rem; border: 1px solid #f1f5f9; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.05); }
+        .ai-btn { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .routine-preview { border: 3px solid #6366f1; border-radius: 2.5rem; background: white; padding: 2rem; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- Navbar -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
+        <div class="max-w-md mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-black text-indigo-600">DrShams <span class="text-[10px] bg-indigo-100 px-2 py-1 rounded-full uppercase">Super AI</span></h1>
+            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600"><i class="fa-solid fa-star"></i></div>
+        </div>
+        <nav class="max-w-md mx-auto flex justify-around text-xs font-black text-slate-400 pb-2">
+            <button onclick="showTab('diag')" id="t-diag" class="pb-2 px-2 active-tab">التشخيص والروتين</button>
+            <button onclick="showTab('store')" id="t-store" class="pb-2 px-2">المخزن</button>
+            <button onclick="showTab('patients')" id="t-patients" class="pb-2 px-2">سجلات المراجعين</button>
+        </nav>
+    </header>
+
+    <!-- SECTION 1: AI Diagnosis & Routine -->
+    <main id="view-diag" class="max-w-md mx-auto p-6 space-y-6">
+        <div class="luxury-card p-6">
+            <h3 class="text-sm font-black mb-3 text-slate-500 uppercase">تحليل الحالة الذكي</h3>
+            <textarea id="aiInput" placeholder="اكتب أعراض الحالة هنا..." class="w-full h-24 p-4 bg-slate-50 rounded-2xl outline-none text-sm font-bold border-none"></textarea>
+            <button onclick="runAI()" class="w-full mt-4 ai-btn text-white py-4 rounded-2xl font-black shadow-lg flex items-center justify-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> تحليل واقتراح روتين
+            </button>
+        </div>
+
+        <div id="aiOutput" class="hidden space-y-4 animate-in fade-in">
+            <div class="bg-indigo-900 text-white p-6 rounded-[2rem] shadow-xl">
+                <p id="diagResult" class="text-sm font-bold leading-relaxed italic"></p>
+            </div>
+            <div id="productMatches" class="space-y-2"></div>
+            <button onclick="openRoutineModal()" class="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black shadow-lg">إنشاء بطاقة الروتين 🖼️</button>
+        </div>
+    </main>
+
+    <!-- SECTION 2: Store Management -->
+    <main id="view-store" class="max-w-md mx-auto p-6 space-y-4 hidden">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-black">مخزن المنتجات</h2>
+            <button onclick="toggleModal('addProdModal', true)" class="w-10 h-10 ai-btn text-white rounded-xl flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div id="storeList" class="space-y-3"></div>
+    </main>
+
+    <!-- SECTION 3: Patients Records -->
+    <main id="view-patients" class="max-w-md mx-auto p-6 space-y-4 hidden">
+        <h2 class="text-xl font-black mb-4">سجلات المتابعة</h2>
+        <div id="patientsList" class="space-y-3"></div>
+    </main>
+
+    <!-- MODAL: Add Product -->
+    <div id="addProdModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-[100] flex items-end p-6">
+        <div class="bg-white w-full max-w-md mx-auto rounded-[2.5rem] p-8">
+            <h3 class="font-black mb-6 text-xl">إضافة منتج للمخزن</h3>
+            <div class="space-y-4">
+                <input id="pName" type="text" placeholder="اسم المنتج" class="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold">
+                <select id="pCat" class="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold">
+                    <option>غسولات</option>
+                    <option>كريمات</option>
+                    <option>مرطبات</option>
+                    <option>مكملات</option>
+                </select>
+                <textarea id="pTags" placeholder="الكلمات المفتاحية (حبوب، دهون، جفاف...)" class="w-full p-4 bg-slate-50 rounded-2xl outline-none h-20"></textarea>
+                <button onclick="saveProduct()" class="w-full ai-btn text-white py-5 rounded-3xl font-black">حفظ المنتج</button>
+                <button onclick="toggleModal('addProdModal', false)" class="w-full py-2 text-slate-300 font-bold">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Routine Card -->
+    <div id="routineModal" class="fixed inset-0 bg-white hidden z-[110] overflow-y-auto p-6">
+        <div class="max-w-md mx-auto text-center">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="toggleModal('routineModal', false)" class="w-10 h-10 bg-slate-100 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+                <span class="text-[10px] font-black text-slate-400 uppercase">صور الشاشة لمشاركة الروتين</span>
+            </div>
+            <div id="finalCard" class="routine-preview text-right">
+                <h2 class="text-3xl font-black text-indigo-600 mb-1">DrShams</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8 border-b pb-4">الروتين الموصى به</p>
+                <div id="routineItems" class="space-y-4"></div>
+                <div class="mt-8 pt-4 border-t border-dashed">
+                    <p class="text-[10px] font-black text-indigo-300 italic">تم التصميم بواسطة نظام د. شمس الذكي</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = ""; 
+        let store = JSON.parse(localStorage.getItem('ds_store')) || [];
+        let selectedItems = [];
+
+        function showTab(tab) {
+            ['diag', 'store', 'patients'].forEach(t => {
+                document.getElementById('view-'+t).classList.toggle('hidden', t !== tab);
+                document.getElementById('t-'+t).classList.toggle('active-tab', t === tab);
+            });
+            if(tab === 'store') renderStore();
+        }
+
+        function toggleModal(id, show) {
+            document.getElementById(id).classList.toggle('hidden', !show);
+        }
+
+        function saveProduct() {
+            const name = document.getElementById('pName').value;
+            const cat = document.getElementById('pCat').value;
+            const tags = document.getElementById('pTags').value;
+            if(!name) return;
+            store.push({ name, cat, tags, id: Date.now() });
+            localStorage.setItem('ds_store', JSON.stringify(store));
+            renderStore();
+            toggleModal('addProdModal', false);
+            document.getElementById('pName').value = '';
+            document.getElementById('pTags').value = '';
+        }
+
+        function renderStore() {
+            const list = document.getElementById('storeList');
+            list.innerHTML = '';
+            store.forEach(p => {
+                list.innerHTML += `
+                    <div class="luxury-card p-4 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-black text-sm">${p.name}</h4>
+                            <span class="text-[9px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold uppercase">${p.cat}</span>
+                        </div>
+                        <button onclick="deleteProd(${p.id})" class="text-rose-300"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteProd(id) {
+            store = store.filter(p => p.id !== id);
+            localStorage.setItem('ds_store', JSON.stringify(store));
+            renderStore();
+        }
+
+        async function runAI() {
+            const input = document.getElementById('aiInput').value;
+            if(!input) return;
+
+            document.getElementById('aiOutput').classList.remove('hidden');
+            document.getElementById('diagResult').innerText = "جاري التحليل الطبي...";
+            document.getElementById('productMatches').innerHTML = '';
+            selectedItems = [];
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: input }] }],
+                        systemInstruction: { parts: [{ text: "أنت دكتور خبير، حلل الحالة بذكاء واكتب تشخيصاً قصيراً جداً باللغة العربية." }] }
+                    })
+                });
+                const data = await res.json();
+                const diag = data.candidates[0].content.parts[0].text;
+                document.getElementById('diagResult').innerText = diag;
+
+                // ربط المخزن
+                const matches = store.filter(p => {
+                    const t = p.tags.split(' ');
+                    return t.some(word => word.length > 2 && (input.includes(word) || diag.includes(word)));
+                });
+
+                const container = document.getElementById('productMatches');
+                if(matches.length > 0) {
+                    matches.forEach(m => {
+                        container.innerHTML += `
+                            <div class="luxury-card p-4 flex justify-between items-center border-l-4 border-l-indigo-500">
+                                <span class="font-bold text-sm text-slate-700">${m.name}</span>
+                                <input type="checkbox" onchange="toggleSelect('${m.name}', '${m.cat}', this.checked)" class="w-6 h-6 accent-indigo-600">
+                            </div>
+                        `;
+                    });
+                } else {
+                    container.innerHTML = '<p class="text-xs text-slate-400 italic text-center">لم نجد منتجات مطابقة في مخزنك.</p>';
+                }
+            } catch (e) { document.getElementById('diagResult').innerText = "خطأ في الاتصال بالسحابة."; }
+        }
+
+        function toggleSelect(name, cat, check) {
+            if(check) selectedItems.push({name, cat});
+            else selectedItems = selectedItems.filter(i => i.name !== name);
+        }
+
+        function openRoutineModal() {
+            if(selectedItems.length === 0) { alert("اختر منتجاً واحداً على الأقل"); return; }
+            const list = document.getElementById('routineItems');
+            list.innerHTML = '';
+            selectedItems.forEach(item => {
+                list.innerHTML += `
+                    <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
+                        <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xs font-black">
+                            ${item.cat[0]}
+                        </div>
+                        <div class="text-right">
+                            <h4 class="font-black text-slate-800 text-sm">${item.name}</h4>
+                            <p class="text-[9px] font-bold text-indigo-500 uppercase">${item.cat}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            toggleModal('routineModal', true);
+        }
+    </script>
+</body>
+</html>
+
