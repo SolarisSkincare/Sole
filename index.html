@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تطبيق عيادة د. شمس</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-btn.active { color: #4f46e5; border-top: 4px solid #4f46e5; background: #f8fafc; }
+    </style>
+</head>
+<body class="pb-28">
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white p-6 rounded-b-[40px] shadow-lg text-center sticky top-0 z-50">
+        <h1 class="text-xl font-black">عيادة الدكتورة شمس علي</h1>
+        <p class="text-[10px] opacity-90 mt-1 font-bold">نظام الإدارة والتشخيص المتكامل</p>
+    </header>
+
+    <div class="max-w-md mx-auto p-4">
+        
+        <!-- Tab 1: Diagnose -->
+        <div id="diagnose" class="tab-content active">
+            <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100 mb-4">
+                <h2 class="font-bold mb-3 text-slate-700 flex items-center">
+                    <span class="ml-2 text-xl">🩺</span> تشخيص حالة
+                </h2>
+                <textarea id="caseText" class="w-full p-4 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl outline-none text-sm h-32 transition-all" placeholder="اكتبي الأعراض (مثلاً: حب شباب، بقع داكنة، جفاف، قشرة)..."></textarea>
+                <button onclick="runDiagnosis()" class="w-full mt-4 bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-indigo-100 active:scale-95 transition-all">تحليل الحالة</button>
+            </div>
+
+            <div id="diagResult" class="hidden bg-white p-5 rounded-[2rem] border-2 border-indigo-50 shadow-inner">
+                <h3 class="text-[10px] font-black text-indigo-500 mb-1">التشخيص المقترح:</h3>
+                <p id="diagName" class="text-lg font-black text-slate-800 mb-4"></p>
+                <h3 class="text-[10px] font-black text-slate-400 mb-3 uppercase tracking-widest">العلاجات المتوفرة:</h3>
+                <div id="suggestedProducts" class="flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Inventory -->
+        <div id="inventory" class="tab-content">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h2 class="font-black text-slate-800 text-lg">📦 المخزن والمنتجات</h2>
+                <button onclick="openAddProduct()" class="bg-green-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md">+ إضافة منتج</button>
+            </div>
+            
+            <div id="inventoryList" class="grid grid-cols-2 gap-3">
+                <!-- Products injected here -->
+            </div>
+        </div>
+
+        <!-- Tab 3: Records -->
+        <div id="records" class="tab-content">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h2 class="font-black text-slate-800 text-lg">📋 سجل المراجعات</h2>
+                <button onclick="exportToNotes()" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-bold">تصدير للملاحظات 📝</button>
+            </div>
+            <div id="recordsList" class="space-y-3"></div>
+        </div>
+
+        <!-- Tab 4: Profits -->
+        <div id="profits" class="tab-content">
+            <div class="bg-gradient-to-br from-indigo-600 to-indigo-900 p-10 rounded-[3rem] text-white text-center shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 text-[120px] opacity-10 font-black">💰</div>
+                <p class="text-sm opacity-70 mb-2">صافي الأرباح الكلي</p>
+                <h2 id="profitValue" class="text-4xl font-black mb-6 tabular-nums">0 <span class="text-lg font-normal">IQD</span></h2>
+                <div class="h-px bg-white/20 w-1/2 mx-auto mb-6"></div>
+                <p class="text-xs font-bold tracking-widest uppercase">Dr. Shams Ali Clinic</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around p-2 pb-8 shadow-2xl z-50">
+        <button onclick="showTab('diagnose', this)" class="nav-btn active flex flex-col items-center flex-1 py-2 rounded-2xl">
+            <span class="text-xl">🩺</span><span class="text-[9px] font-black mt-1">التشخيص</span>
+        </button>
+        <button onclick="showTab('inventory', this)" class="nav-btn flex flex-col items-center flex-1 py-2 rounded-2xl">
+            <span class="text-xl">📦</span><span class="text-[9px] font-black mt-1">المخزن</span>
+        </button>
+        <button onclick="showTab('records', this)" class="nav-btn flex flex-col items-center flex-1 py-2 rounded-2xl">
+            <span class="text-xl">📋</span><span class="text-[9px] font-black mt-1">السجل</span>
+        </button>
+        <button onclick="showTab('profits', this)" class="nav-btn flex flex-col items-center flex-1 py-2 rounded-2xl">
+            <span class="text-xl">💰</span><span class="text-[9px] font-black mt-1">الأرباح</span>
+        </button>
+    </nav>
+
+    <!-- Modal: Save Visit -->
+    <div id="saveModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl">
+            <h2 class="font-black text-lg mb-4 text-slate-800">بيانات المراجعة</h2>
+            <input id="patientName" type="text" class="w-full p-4 bg-slate-50 rounded-2xl mb-3 outline-none border border-transparent focus:border-indigo-500" placeholder="اسم المراجعة">
+            <textarea id="patientRoutine" class="w-full p-4 bg-slate-50 rounded-2xl mb-4 outline-none h-24" placeholder="الروتين: غسول (صباحاً)، مرطب (ليلاً)..."></textarea>
+            <div class="flex gap-2">
+                <button onclick="confirmVisit()" class="flex-[2] bg-indigo-600 text-white py-4 rounded-2xl font-black">حفظ السجل</button>
+                <button onclick="closeModals()" class="flex-1 bg-slate-100 text-slate-400 py-4 rounded-2xl font-bold">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Product -->
+    <div id="addProdModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl">
+            <h2 class="font-black text-lg mb-4">إضافة منتج جديد</h2>
+            <div class="space-y-3">
+                <input id="newProdName" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border border-transparent focus:border-indigo-500" placeholder="اسم المنتج (مثلاً: واقي شمس لاروش)">
+                <input id="newProdCat" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border border-transparent focus:border-indigo-500" placeholder="الفئة (حب، تصبغ، جفاف، عام)">
+                <input id="newProdPrice" type="number" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border border-transparent focus:border-indigo-500" placeholder="سعر البيع (دينار)">
+                <input id="newProdProfit" type="number" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border border-transparent focus:border-indigo-500" placeholder="صافي ربحك (دينار)">
+                <div class="flex gap-2 mt-4">
+                    <button onclick="saveNewProduct()" class="flex-[2] bg-green-500 text-white py-4 rounded-2xl font-black">إضافة للمخزن</button>
+                    <button onclick="closeModals()" class="flex-1 bg-slate-100 text-slate-400 py-4 rounded-2xl font-bold">إغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // دكتورة، هذه هي المنتجات الأساسية وقمت بتوزيعها حسب الحالات
+        let initialProducts = [
+            { id: 1, name: "غسول شجرة الشاي (Tea Tree)", cat: "حب", price: 15000, profit: 5000 },
+            { id: 2, name: "سيروم ألفا أربوتين (تفتيح)", cat: "تصبغ", price: 25000, profit: 10000 },
+            { id: 3, name: "مرطب الهيالورونيك اسيد", cat: "جفاف", price: 18000, profit: 4000 },
+            { id: 4, name: "واقي شمس فيزيائي", cat: "عام", price: 22000, profit: 7000 },
+            { id: 5, name: "كريم ديفرين (0.1%)", cat: "حب", price: 12000, profit: 3000 },
+            { id: 6, name: "سيروم نياسيناميد (10%)", cat: "حب", price: 24000, profit: 8000 },
+            { id: 7, name: "سيروم فيتامين C (تفتيح)", cat: "تصبغ", price: 28000, profit: 12000 },
+            { id: 8, name: "كريم سيكابلاست (مرمم)", cat: "جفاف", price: 20000, profit: 5000 }
+        ];
+
+        let db = JSON.parse(localStorage.getItem('shams_clinic_db_v5')) || {
+            products: initialProducts,
+            history: [],
+            totalEarnings: 0
+        };
+
+        let activeSelection = {};
+
+        function saveDB() {
+            localStorage.setItem('shams_clinic_db_v5', JSON.stringify(db));
+            render();
+        }
+
+        function showTab(id, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function runDiagnosis() {
+            const txt = document.getElementById('caseText').value;
+            if(!txt) return;
+
+            let diag = "حالة جلدية عامة";
+            if(txt.includes('حب')) diag = "حب شباب (Acne)";
+            else if(txt.includes('تصبغ') || txt.includes('كلف') || txt.includes('بقع')) diag = "تصبغات / كلف (Melasma)";
+            else if(txt.includes('جفاف') || txt.includes('قشور')) diag = "جفاف بشرة (Xerosis)";
+
+            document.getElementById('diagName').innerText = diag;
+            const matches = db.products.filter(p => txt.includes(p.cat) || p.cat === "عام");
+            
+            document.getElementById('suggestedProducts').innerHTML = matches.map(p => `
+                <button onclick="openSaveModal('${diag}', '${p.name}', ${p.profit})" class="bg-indigo-50 text-indigo-700 border-2 border-indigo-100 px-4 py-2 rounded-2xl text-[10px] font-black shadow-sm active:bg-indigo-600 active:text-white transition-all">
+                    صرف: ${p.name}
+                </button>
+            `).join('') || '<p class="text-rose-500 text-xs font-bold">يرجى إضافة منتجات لهذا التشخيص في المخزن</p>';
+            
+            document.getElementById('diagResult').classList.remove('hidden');
+        }
+
+        function openSaveModal(d, t, p) {
+            activeSelection = { diag: d, treat: t, profit: p };
+            document.getElementById('saveModal').classList.remove('hidden');
+        }
+
+        function openAddProduct() {
+            document.getElementById('addProdModal').classList.remove('hidden');
+        }
+
+        function closeModals() {
+            document.getElementById('saveModal').classList.add('hidden');
+            document.getElementById('addProdModal').classList.add('hidden');
+        }
+
+        function confirmVisit() {
+            const name = document.getElementById('patientName').value;
+            if(!name) return alert("يرجى كتابة اسم المراجعة");
+
+            db.history.unshift({
+                name,
+                diag: activeSelection.diag,
+                treat: activeSelection.treat,
+                routine: document.getElementById('patientRoutine').value || "روتين قياسي",
+                profit: activeSelection.profit,
+                date: new Date().toLocaleDateString('ar-IQ')
+            });
+
+            db.totalEarnings += activeSelection.profit;
+            saveDB();
+            closeModals();
+            document.getElementById('caseText').value = "";
+            document.getElementById('diagResult').classList.add('hidden');
+            document.getElementById('patientName').value = "";
+            document.getElementById('patientRoutine').value = "";
+        }
+
+        function saveNewProduct() {
+            const n = document.getElementById('newProdName').value;
+            const c = document.getElementById('newProdCat').value;
+            const p = parseInt(document.getElementById('newProdPrice').value);
+            const pr = parseInt(document.getElementById('newProdProfit').value);
+
+            if(n && p) {
+                db.products.push({ id: Date.now(), name: n, cat: c, price: p, profit: pr });
+                saveDB();
+                closeModals();
+                alert("تمت إضافة المنتج للمخزن بنجاح دكتورة");
+            }
+        }
+
+        function exportToNotes() {
+            const text = db.history.map(h => `${h.date}: ${h.name} - ${h.diag}`).join('\n');
+            navigator.clipboard.writeText("سجل عيادة د. شمس:\n" + text);
+            alert("تم نسخ السجل بالكامل! يمكنكِ الآن لصقه في الملاحظات.");
+        }
+
+        function render() {
+            // Render Inventory
+            document.getElementById('inventoryList').innerHTML = db.products.map(p => `
+                <div class="bg-white p-4 rounded-3xl text-center border-2 border-slate-50 shadow-sm">
+                    <div class="text-2xl mb-2">🧴</div>
+                    <h4 class="font-bold text-[10px] truncate mb-1 text-slate-800">${p.name}</h4>
+                    <p class="text-indigo-600 font-black text-[11px] tabular-nums">${p.price.toLocaleString()} د.ع</p>
+                    <p class="text-[8px] text-slate-400 mt-1 uppercase font-bold tracking-widest">${p.cat}</p>
+                </div>
+            `).join('');
+
+            // Render Records
+            document.getElementById('recordsList').innerHTML = db.history.map(h => `
+                <div class="bg-white p-5 rounded-[2.5rem] border-r-8 border-indigo-600 shadow-sm relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-black text-slate-800">${h.name}</h3>
+                        <span class="text-[9px] text-slate-400 font-bold">${h.date}</span>
+                    </div>
+                    <div class="text-[11px] space-y-2">
+                        <p><span class="text-indigo-600 font-bold">التشخيص:</span> ${h.diag}</p>
+                        <p><span class="text-indigo-600 font-bold">العلاج:</span> ${h.treat}</p>
+                        <div class="bg-slate-50 p-3 rounded-2xl italic text-slate-500 font-bold">"${h.routine}"</div>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-center py-20 text-slate-300 italic">لا توجد مراجعات حالياً</p>';
+
+            // Render Profits
+            document.getElementById('profitValue').innerHTML = `${db.totalEarnings.toLocaleString()} <span class="text-lg font-normal">IQD</span>`;
+        }
+
+        window.onload = render;
+    </script>
+</body>
+</html>
+
