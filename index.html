@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>عيادة د. شمس</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #fdf2f8; touch-action: manipulation; }
+        .pink-gradient { background: linear-gradient(135deg, #db2777 0%, #9d174d 100%); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- الواجهة العلوية (الحصالة) -->
+    <div class="pink-gradient p-8 rounded-b-[3rem] text-white text-center shadow-xl">
+        <p class="text-xs opacity-80 mb-2 font-bold tracking-widest">إجمالي المبلغ في القاصة</p>
+        <h1 id="totalBalance" class="text-4xl font-black tabular-nums">0 <span class="text-lg">د.ع</span></h1>
+    </div>
+
+    <div class="max-w-md mx-auto p-6">
+        
+        <!-- قسم الإضافة -->
+        <div id="home" class="tab-content active space-y-6">
+            
+            <!-- إضافة مراجعة جديدة -->
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-pink-100">
+                <h2 class="font-bold text-slate-700 mb-4 flex items-center">
+                    <span class="ml-2 text-xl">👤</span> إضافة مراجعة جديدة
+                </h2>
+                <input id="patientName" type="text" class="w-full p-4 bg-slate-50 rounded-2xl mb-3 outline-none border-2 border-transparent focus:border-pink-200" placeholder="اسم المراجعة الثلاثي">
+                <input id="patientAmount" type="number" inputmode="numeric" class="w-full p-4 bg-slate-50 rounded-2xl mb-3 outline-none border-2 border-transparent focus:border-pink-200" placeholder="المبلغ المدفوع (اختياري)">
+                <textarea id="patientNote" class="w-full p-4 bg-slate-50 rounded-2xl outline-none h-20 text-sm" placeholder="ملاحظات أو روتين علاجي..."></textarea>
+                
+                <button onclick="addPatient()" class="w-full mt-4 pink-gradient text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all">حفظ المراجعة</button>
+            </div>
+
+            <!-- إضافة مبلغ سريع (بدون اسم) -->
+            <div class="bg-pink-50 p-4 rounded-[1.5rem] border border-pink-100">
+                <p class="text-[10px] font-bold text-pink-400 mb-2 uppercase tracking-widest">إضافة مبلغ سريع للقاصة:</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="quickAdd(25000)" class="bg-white py-3 rounded-xl font-bold text-pink-600 shadow-sm border border-pink-100">+ 25 ألف</button>
+                    <button onclick="quickAdd(50000)" class="bg-white py-3 rounded-xl font-bold text-pink-600 shadow-sm border border-pink-100">+ 50 ألف</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- سجل المراجعين -->
+        <div id="history" class="tab-content">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h2 class="font-black text-slate-800 text-lg">📋 سجل المراجعات</h2>
+                <button onclick="clearAll()" class="text-[10px] text-rose-400 font-bold underline">تصفير الكل</button>
+            </div>
+            <div id="historyList" class="space-y-4"></div>
+        </div>
+
+    </div>
+
+    <!-- الملاحة السفلية -->
+    <nav class="fixed bottom-6 left-6 right-6 bg-white/95 backdrop-blur-md border border-pink-100 flex justify-around p-2 rounded-3xl shadow-2xl z-50">
+        <button onclick="showTab('home', this)" class="nav-btn flex flex-col items-center flex-1 py-3 text-pink-600 font-black">
+            <span class="text-xl">➕</span><span class="text-[10px] mt-1">إضافة</span>
+        </button>
+        <button onclick="showTab('history', this)" class="nav-btn flex flex-col items-center flex-1 py-3 text-slate-400 font-black">
+            <span class="text-xl">📋</span><span class="text-[10px] mt-1">السجل</span>
+        </button>
+    </nav>
+
+    <script>
+        let data = JSON.parse(localStorage.getItem('shams_pro_db')) || {
+            balance: 0,
+            logs: []
+        };
+
+        function save() {
+            localStorage.setItem('shams_pro_db', JSON.stringify(data));
+            render();
+        }
+
+        function showTab(id, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.remove('text-pink-600');
+                b.classList.add('text-slate-400');
+            });
+            btn.classList.add('text-pink-600');
+            btn.classList.remove('text-slate-400');
+        }
+
+        function addPatient() {
+            const name = document.getElementById('patientName').value;
+            const amount = parseInt(document.getElementById('patientAmount').value) || 0;
+            const note = document.getElementById('patientNote').value || "لا توجد ملاحظات";
+
+            if(!name) {
+                alert("دكتورة، يرجى كتابة اسم المراجعة أولاً");
+                return;
+            }
+
+            data.balance += amount;
+            data.logs.unshift({
+                type: 'patient',
+                name,
+                amount,
+                note,
+                date: new Date().toLocaleString('ar-IQ', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'})
+            });
+
+            // مسح الحقول بعد الحفظ
+            document.getElementById('patientName').value = "";
+            document.getElementById('patientAmount').value = "";
+            document.getElementById('patientNote').value = "";
+            
+            save();
+            alert("تم حفظ المراجعة والمبلغ بنجاح!");
+        }
+
+        function quickAdd(val) {
+            data.balance += val;
+            data.logs.unshift({
+                type: 'quick',
+                name: 'إضافة سريعة',
+                amount: val,
+                note: 'إضافة مباشرة للقاصة',
+                date: new Date().toLocaleString('ar-IQ', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'})
+            });
+            save();
+        }
+
+        function clearAll() {
+            if(confirm("دكتورة شمس، هل أنتِ متأكدة من مسح السجل وتصفير القاصة؟")) {
+                data = { balance: 0, logs: [] };
+                save();
+            }
+        }
+
+        function render() {
+            document.getElementById('totalBalance').innerHTML = `${data.balance.toLocaleString()} <span class="text-sm font-normal">د.ع</span>`;
+            
+            document.getElementById('historyList').innerHTML = data.logs.map(l => `
+                <div class="bg-white p-5 rounded-[2rem] shadow-sm border-r-8 ${l.type === 'patient' ? 'border-pink-500' : 'border-indigo-400'}">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-black text-slate-800">${l.name}</h3>
+                        <span class="text-[9px] text-slate-300 font-bold">${l.date}</span>
+                    </div>
+                    <div class="flex justify-between items-end">
+                        <p class="text-xs text-slate-500 italic flex-1 pl-4">${l.note}</p>
+                        <div class="text-sm font-black text-pink-600 tabular-nums">+ ${l.amount.toLocaleString()}</div>
+                    </div>
+                </div>
+            `).join('') || '<div class="text-center py-20 text-slate-300 italic">السجل فارغ حالياً دكتورة</div>';
+        }
+
+        window.onload = render;
+    </script>
+</body>
+</html>
+
